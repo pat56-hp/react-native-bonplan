@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, Switch, Image, Pressable } from 'react-native'
+import { View, Text, StyleSheet, Switch, Image, Pressable, Alert, ActivityIndicator } from 'react-native'
 import React, { useRef, useState } from 'react'
+import { useForm, Controller } from "react-hook-form"
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { size } from '@/constants/FontSize'
 import InputContent from '@/components/InputContent'
@@ -10,6 +11,9 @@ import LowEye from '@/assets/icons/low-eye.svg';
 import { Link, useNavigation } from 'expo-router'
 import ButtonComponent from '@/components/ButtonComponent'
 import PageComponent from '@/components/PageComponent'
+import { loginUser } from '@/controllers/authController'
+import Toast from 'react-native-toast-message'
+import { useAuthStateContext } from '@/contexts/AuthContextProvider'
 
 /**
  * Screen page de connexion
@@ -18,11 +22,18 @@ import PageComponent from '@/components/PageComponent'
 export default function Login() {
   const colors = useThemeColor()
   const navigation = useNavigation()
-
-  const [email, setEmail] = useState(null)
-  const [password, setPassword] = useState(null)
   const [isCached, setIsCached] = useState(true)
   const [isEnabled, setIsEnabled] = useState(false);
+  const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState([])
+  const {setToken, setUser} = useAuthStateContext()
+
+  const {
+    control, 
+    handleSubmit, 
+    reset,
+    formState: {errors}
+  } = useForm()
 
   //Active ou inactive se souvenir de moi
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
@@ -30,12 +41,43 @@ export default function Login() {
   const toggleSecureText = () => setIsCached(!isCached)
 
   //Soumission du formulaire
-  const logSubmit = () => {
-    console.log(email, password)
-    navigation.reset({
-      index: 0,
-      routes: [{ name: '(tabs)' }],
-    });
+  const onSubmit = (data) => {
+    setLoading(true)
+    setFormError(null)
+    loginUser(data)
+      .then(data => {
+        const token = data.access_token
+        const user = data.user
+        setToken(token)
+        setUser(user)
+        reset()
+        setLoading(false)
+        navigation.reset({
+          index: 0,
+          routes: [{name: '(tabs)'}]
+        })
+      })
+      .catch(err => {
+        const response = err.response
+        if (err.status === 422) {
+          const errors = response.data
+          Object.keys(errors).map(key => {
+            setFormError(prevFormError => (
+              {...prevFormError, [key]: errors[key]}
+            ))
+          })
+        }else if(err.status === 406){
+          const error = response.message
+          console.log(error)
+          Toast.show({
+            type: 'error',
+            text1: 'Oups 🤯',
+            text2: error
+          })
+        }
+
+        setLoading(false)
+      })
   }
 
   return (
@@ -44,24 +86,58 @@ export default function Login() {
         <Text style={[styles.pageTitle, {color: colors.title}]}>Connexion</Text>
         <Text style={[styles.text, {color: colors.text}]}>Renseignez vos informations de connexion</Text>
         {/* Formulaire */}
+        
         <View style={styles.form}>
-          <InputContent style={{width: '100%', height: 'auto'}} placeholder="Adresse email" onSet={setEmail}>
-            <Envelope width={size.icon} height={size.icon} fill={colors.icon} />
-          </InputContent>
-          <InputContent 
-            placeholder="Mot de passe" 
-            onSet={setPassword}
-            secureText = {isCached}
-            style={{ position: 'relative' }}
-          >
-            <Lock width={size.icon} height={size.icon} fill={colors.icon} />
-            <Pressable onPress={toggleSecureText} style={styles.eye}>
-              {isCached
-                ? <LowEye width={size.icon} height={size.icon} fill={colors.icon} />
-                : <Eye width={size.icon} height={size.icon} fill={colors.icon} />
-              }
-            </Pressable>
-          </InputContent>
+          <View style={styles.formElement}>
+            <Controller 
+              control={control}
+              rules={{required: true}}
+              name="email"
+              render={({field: {onChange, value}}) => (
+                <InputContent 
+                  style={{
+                    width: '100%', 
+                    borderColor: (errors?.email || formError?.email) && colors.tint,
+                  }} 
+                  placeholder="Adresse email" 
+                  onSet={onChange}
+                  value={value}
+                >
+                  <Envelope width={size.icon} height={size.icon} fill={colors.icon} />
+                </InputContent>
+              )}
+            />
+            {(errors.email || formError?.email)  && <Text style={{color: colors.tint, fontSize: size.text}}>{errors.email ? 'Adresse email obligatoire' : formError?.email}</Text>}
+          </View>
+          <View style={styles.formElement}>
+            <Controller 
+              control={control}
+              rules={{required: true}}
+              name="password"
+              render={({field: {onChange, value}}) => (
+                <InputContent 
+                  placeholder="Mot de passe" 
+                  onSet={onChange}
+                  value={value}
+                  secureText = {isCached}
+                  style={{ 
+                    width: '100%', 
+                    position: 'relative', 
+                    borderColor: (errors.password || formError?.password) && colors.tint
+                  }}
+                >
+                  <Lock width={size.icon} height={size.icon} fill={colors.icon} />
+                  <Pressable onPress={toggleSecureText} style={styles.eye}>
+                    {isCached
+                      ? <LowEye width={size.icon} height={size.icon} fill={colors.icon} />
+                      : <Eye width={size.icon} height={size.icon} fill={colors.icon} />
+                    }
+                  </Pressable>
+                </InputContent>
+              )}
+            />
+            {(errors.password || formError?.password)  && <Text style={{color: colors.tint, fontSize: size.text}}>{errors.password ? 'Mot de passe obligatoire' : formError?.password}</Text>}
+          </View>
           <View style={styles.buttonContent}>
             <View style = {styles.resetOrRemember}>
               <Switch
@@ -78,10 +154,14 @@ export default function Login() {
 
             {/* Click sur le bouton de connexion */}
             <ButtonComponent
-              onPress={() => logSubmit() }
+              onPress={handleSubmit(onSubmit)}
               style={{backgroundColor: colors.tint}}
             >
-              <Text style={styles.connexion}>Se connecter</Text>
+              {
+                loading 
+                  ? <ActivityIndicator size={size.headerIcon} color={colors.textDefault} />
+                  : <Text style={styles.connexion}>Se connecter</Text>
+              }
             </ButtonComponent>
           </View>
         </View>
@@ -137,6 +217,10 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 18
+  },
+  formElement: {
+    width: '100%',
+    gap: 5
   },
   inputComponent: {
     width: '100%',

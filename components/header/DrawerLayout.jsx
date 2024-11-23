@@ -1,16 +1,17 @@
 import { View, Text, DrawerLayoutAndroid } from 'react-native'
 import React from 'react'
 import Home from '@/app/(tabs)'
+import { createDrawerNavigator } from '@react-navigation/drawer'
 
-export default function DrawerLayout({children, ref}) {
+const Drawer = createDrawerNavigator()
+
+export default function DrawerLayout() {
     
   return (
-    <DrawerLayoutAndroid 
-        ref={ref}
-        drawerWidth={300}
-        renderNavigationView={() => <Home />}
+    <Drawer.Navigator 
+      initialRouteName='Home'
     >
-        {children}
-    </DrawerLayoutAndroid>
+      <Drawer.Screen name='Home' component={Home} />
+    </Drawer.Navigator>
   )
 }

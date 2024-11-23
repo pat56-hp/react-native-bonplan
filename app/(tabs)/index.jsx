@@ -7,23 +7,11 @@ import WeekItem from '@/components/plans/WeekItem'
 import PlanItem from '@/components/plans/PlanItem'
 import { useNavigation } from 'expo-router'
 import PlanByCategory from '@/components/plans/PlanByCategory'
+import { useAuthStateContext } from '@/contexts/AuthContextProvider'
 
 export default function Home() {
   const colors = useThemeColor()
   const navigation = useNavigation()
-
-  {/* Afficher les items par categorie */}
-  const showDataPerCategory = () => {
-    if (categoryItems.length > 0) {
-      return categoryItems.map((item, key) => <PlanItem key={key} item={item} />)
-    }else{
-      return (
-        <View style={styles.categoryItem}>
-          <Text style={{color: colors.text, textAlign: 'center', fontWeight: 'bold', fontSize: size.headerTitle}}>Aucun établissement trouvé</Text>
-        </View>
-      )
-    }
-  }
   
   return (
     <>

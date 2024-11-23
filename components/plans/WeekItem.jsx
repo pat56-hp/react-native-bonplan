@@ -1,13 +1,13 @@
-import { View, Text, StyleSheet, Image } from 'react-native'
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native'
 import React from 'react'
 import { size } from '@/constants/FontSize'
 import ButtonComponent from '@/components/ButtonComponent'
 import HeartIcon from "@/assets/icons/heart.svg"
 import BookmarkIcon from "@/assets/icons/bookmark.svg"
-import StarIcon from "@/assets/icons/star.svg"
 import MarkerIcon from "@/assets/icons/marker.svg"
 import { useThemeColor } from '@/hooks/useThemeColor'
 import Start from '../Start'
+import { Link } from 'expo-router'
 
 export default function WeekItem({style}) {
     const colors = useThemeColor()
@@ -15,10 +15,16 @@ export default function WeekItem({style}) {
   return (
     <View style={[style, styles.weekItem]}>
         <View style={styles.imageCard}>
-            <Image
-            source={require('@/assets/images/image1.png')}
-            style={styles.imageWeek}
-            />
+            <Link href={{ pathname: '/pages/Details'}} asChild>
+                <Pressable
+                    android_ripple={{color: '#FDFAF5', borderless: false, foreground: true}}
+                >
+                    <Image
+                        source={require('@/assets/images/image1.png')}
+                        style={styles.imageWeek}
+                    />
+                </Pressable>
+            </Link>
             <View style={styles.buttonContainer}>
                 <View style={styles.itemWeekStatus}>
                     <Text style={[{color: colors.textDefault, fontSize: size.placeholder}]}>Fermé</Text>

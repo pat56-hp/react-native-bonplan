@@ -9,12 +9,12 @@ export default function InputContent({
   secureText = false, 
   style, 
   value,
-  children
+  children,
 }) {
     const colors = useThemeColor()
 
   return (
-    <View style = {[styles.inputComponent, style]}>
+    <View style = {[styles.inputComponent, style, {borderColor: style?.borderColor ?? '#E8E8E8'}]}>
         {children}
         <TextInput
           onChangeText={onSet}
@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
       padding: 16,
       gap: 12,
       borderWidth: 1,
-      borderColor: '#E8E8E8',
       borderRadius: 12,
       backgroundColor: '#ffffff',
       //flexGrow: 1

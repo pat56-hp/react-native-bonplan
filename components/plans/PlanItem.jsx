@@ -64,8 +64,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         shadowColor: 'rgba(0, 0, 0, 0.15)',
         shadowOffset: { width: 1, height: 1 },
-        shadowOpacity: 4,
-        elevation: 4,
+        shadowOpacity: 5,
+        elevation: 5,
+        
 
     },
     imageContent:{
